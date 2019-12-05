@@ -37,7 +37,7 @@ if args.output is None:
 else:
     output_path = Path(args.output)
 
-with open(input_path, 'r') as input_file, open(output_path, 'w+') as output_file:
+with open(input_path, 'r') as input_file, open(output_path, 'w+', newline='') as output_file:
     csv_reader = csv.reader(input_file)
     csv_writer = csv.writer(output_file, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
 
