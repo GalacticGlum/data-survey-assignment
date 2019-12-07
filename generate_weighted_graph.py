@@ -53,6 +53,9 @@ with open(input_path, 'r') as input_file:
         row_count += 1
 
     total_frequency = sum(frequency.values())
+
+    # TODO: Fix relative frequency calculation by avoiding duplicates...
+
     # Calculate weighting of points as a function of frequency
     relative_frequencies = [frequency[(x[i], y[i])] / total_frequency for i in range(len(x))]
     max_relative_frequencies = max(relative_frequencies)
