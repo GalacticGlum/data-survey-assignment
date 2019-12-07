@@ -8,6 +8,9 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from pathlib import Path
+from utils import init_logger
+
+logger = init_logger()
 
 parser = argparse.ArgumentParser(description='Generate a weighted graph based on two-dimensional data.')
 parser.add_argument('input', type=str, help='The path to the raw data CSV file.')
@@ -15,6 +18,13 @@ parser.add_argument('-x', '--independent-variable', dest='x_column', type=int, h
 parser.add_argument('-y', '--dependent-variable', dest='y_column', type=int, help='The (zero-based) index of the column representing the dependent variable (y).', default=1)
 parser.add_argument('--header-row', type=int, help='The (zero-based) index of the header row.', default=0)
 parser.add_argument('--matplotlib-style', type=str, help='The matplotlib graph style.', default='default')
+parser.add_argument('--export', dest='export', help='Enable export to file.', action='store_true')
+parser.add_argument('--no-export', dest='export', help='Disable export to file.', action='store_false')
+parser.add_argument('--export-output', type=str, help='The path to the exported file.', default=None)
+parser.add_argument('--export-dpi', type=int, help='The DPI of the exported file.', default=400)
+parser.add_argument('--export-format', type=str, help='The format of the exported file.', default='png')
+parser.add_argument('--no-preview', dest='preview', help='Disable the graph preview window.', action='store_false')
+parser.set_defaults(export=False, preview=True)
 args = parser.parse_args()
 
 # Initialize matplotlib style
@@ -119,4 +129,28 @@ with open(input_path, 'r') as input_file:
     plt.xlabel(x_title)
     plt.ylabel(y_title)
     plt.legend(loc='upper right')
-    plt.show()
+
+    if args.preview:
+        if not args.export:
+            plt.show()
+        else:
+            logger.warning('Graph preview was enabled but it could not be displayed since export was also enabled.' +
+                ' Previewing and exporting cannot both be enabled.')
+
+    if args.export:
+        output_format = args.export_format[1:] if args.export_format.startswith('.') else args.export_format
+        if args.export_output is None:
+            output_extension = output_format
+            if output_extension == 'latex':
+                output_extension = 'tex'
+            
+            output_path = input_path.with_suffix('.export.' + output_extension)
+        else:
+            output_path = Path(args.export_output)
+        
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        if output_format == 'latex':
+            import tikzplotlib
+            tikzplotlib.save(output_path)
+        else:
+            plt.savefig(output_path, dpi=args.export_dpi)
