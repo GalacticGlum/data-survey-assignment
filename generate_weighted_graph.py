@@ -71,11 +71,13 @@ with open(input_path, 'r') as input_file:
     plt.colorbar(scatter)
 
     # regression line
+    sorted_unique_x = sorted(unique_x)
+
     unweighted_trendline = np.poly1d(np.polyfit(unique_x, unique_y, 1))
-    plt.plot(unique_x, unweighted_trendline(unique_x), linestyle='--', label='Unweighted regression')
+    plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
 
     weighted_trendline = np.poly1d(np.polyfit(unique_x, unique_y, 1, w=relative_frequencies))
-    plt.plot(unique_x, weighted_trendline(unique_x), color='red', label='Weighted regression')
+    plt.plot(sorted_unique_x, weighted_trendline(sorted_unique_x), color='red', label='Weighted regression')
 
     plt.title('{} vs. {}'.format(y_title, x_title))
     plt.xlabel(x_title)
