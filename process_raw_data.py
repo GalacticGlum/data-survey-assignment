@@ -3,7 +3,6 @@ Process the raw data CSV to compute the SWL scores from the satisfaction survey 
 '''
 
 import csv
-import copy
 import argparse
 from pathlib import Path
 from utils import init_logger
@@ -21,7 +20,7 @@ RESPONE_SCORE_MAP = {
 }
 
 parser = argparse.ArgumentParser(description='Process the raw data CSV to compute the SWL scores from the satisfaction survey responses.')
-parser.add_argument('input', type=str, help='The path to the raw dat CSV file.')
+parser.add_argument('input', type=str, help='The path to the raw data CSV file.')
 parser.add_argument('--output', type=str, help='The filepath of the output file.', default=None)
 parser.add_argument('-q', '--swl-questions', nargs='+', type=int, help='The (zero-based) indices of the columns representing the responses to the SWL satsification survey.')
 parser.add_argument('--swl-header-name', type=str, help='The name of the SWL score header in the processed CSV', default='SWL Score')
