@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='Generate a weighted graph based on
 parser.add_argument('input', type=str, help='The path to the raw data CSV file.')
 parser.add_argument('-x', '--independent-variable', dest='x_column', type=int, help='The (zero-based) index of the column representing the independent variable (x).', default=0)
 parser.add_argument('-y', '--dependent-variable', dest='y_column', type=int, help='The (zero-based) index of the column representing the dependent variable (y).', default=1)
-parser.add_argument('--header-row', type=int, help='The index of the header row.', default=0)
+parser.add_argument('--header-row', type=int, help='The (zero-based) index of the header row.', default=0)
 args = parser.parse_args()
 
 input_path = Path(args.input)
@@ -54,7 +54,7 @@ with open(input_path, 'r') as input_file:
 
     color_map = plt.cm.get_cmap('Blues')
     frequency_weight = [r / max_relative_frequencies for r in relative_frequencies]
-    scatter = plt.scatter(x, y, s=100, c=frequency_weight, cmap=color_map)
+    scatter = plt.scatter(x, y, s=200, c=frequency_weight, cmap=color_map)
     plt.colorbar(scatter)
 
     plt.title('{} vs. {}'.format(y_title, x_title))
