@@ -31,7 +31,7 @@ with open(input_path, 'r') as input_file:
     x_title = 'X'
     y_title = 'Y'
 
-    x, y = [], []
+    data = {}
     frequency = {}
     
     row_count = 0
@@ -41,9 +41,10 @@ with open(input_path, 'r') as input_file:
         if is_header_row:
             x_title, y_title = xi, yi
         else:
-            x.append(xi)
-            y.append(yi)
+            if xi not in data:
+                data[xi] = []
 
+            data[xi].append(yi)
             point = (xi, yi)
             if point not in frequency:
                 frequency[point] = 0
@@ -55,7 +56,7 @@ with open(input_path, 'r') as input_file:
     total_frequency = sum(frequency.values())
 
     # Get unique points
-    unique_points = frequency.keys()
+    unique_points = list(frequency.keys())
     unique_x, unique_y = [point[0] for point in unique_points], [point[1] for point in unique_points]
 
     # Calculate weighting of points as a function of frequency
