@@ -54,25 +54,27 @@ with open(input_path, 'r') as input_file:
 
     total_frequency = sum(frequency.values())
 
-    # TODO: Fix relative frequency calculation by avoiding duplicates...
+    # Get unique points
+    unique_points = frequency.keys()
+    unique_x, unique_y = [point[0] for point in unique_points], [point[1] for point in unique_points]
 
     # Calculate weighting of points as a function of frequency
-    relative_frequencies = [frequency[(x[i], y[i])] / total_frequency for i in range(len(x))]
+    relative_frequencies = [frequency[point] / total_frequency for point in unique_points]
     max_relative_frequencies = max(relative_frequencies)
 
     color_map = plt.cm.get_cmap('Blues')
     frequency_weight = [r / max_relative_frequencies for r in relative_frequencies]
 
     # scatter plot
-    scatter = plt.scatter(x, y, c=frequency_weight, cmap=color_map)
+    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=color_map)
     plt.colorbar(scatter)
 
     # regression line
-    unweighted_trendline = np.poly1d(np.polyfit(x, y, 1))
-    plt.plot(x, unweighted_trendline(x), '--', label='Unweighted regression')
+    unweighted_trendline = np.poly1d(np.polyfit(unique_x, unique_y, 1))
+    plt.plot(unique_x, unweighted_trendline(unique_x), linestyle='--', label='Unweighted regression')
 
-    weighted_trendline = np.poly1d(np.polyfit(x, y, 1, w=frequency_weight))
-    plt.plot(x, weighted_trendline(x), color='red', label='Weighted regression')
+    weighted_trendline = np.poly1d(np.polyfit(unique_x, unique_y, 1, w=frequency_weight))
+    plt.plot(unique_x, weighted_trendline(unique_x), color='red', label='Weighted regression')
 
     plt.title('{} vs. {}'.format(y_title, x_title))
     plt.xlabel(x_title)
