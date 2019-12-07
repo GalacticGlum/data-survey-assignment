@@ -5,6 +5,7 @@ Generate a weighted graph based on two-dimensional data.
 import csv
 import argparse
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 from pathlib import Path
 
@@ -13,7 +14,11 @@ parser.add_argument('input', type=str, help='The path to the raw data CSV file.'
 parser.add_argument('-x', '--independent-variable', dest='x_column', type=int, help='The (zero-based) index of the column representing the independent variable (x).', default=0)
 parser.add_argument('-y', '--dependent-variable', dest='y_column', type=int, help='The (zero-based) index of the column representing the dependent variable (y).', default=1)
 parser.add_argument('--header-row', type=int, help='The (zero-based) index of the header row.', default=0)
+parser.add_argument('--matplotlib-style', type=str, help='The matplotlib graph style.', default='default')
 args = parser.parse_args()
+
+# Initialize matplotlib style
+matplotlib.style.use(args.matplotlib_style)
 
 input_path = Path(args.input)
 if not (input_path.is_file() or input_path.exists()):
@@ -54,10 +59,20 @@ with open(input_path, 'r') as input_file:
 
     color_map = plt.cm.get_cmap('Blues')
     frequency_weight = [r / max_relative_frequencies for r in relative_frequencies]
-    scatter = plt.scatter(x, y, s=200, c=frequency_weight, cmap=color_map)
+
+    # scatter plot
+    scatter = plt.scatter(x, y, c=frequency_weight, cmap=color_map)
     plt.colorbar(scatter)
+
+    # regression line
+    unweighted_trendline = np.poly1d(np.polyfit(x, y, 1))
+    plt.plot(x, unweighted_trendline(x), '--', label='Unweighted regression')
+
+    weighted_trendline = np.poly1d(np.polyfit(x, y, 1, w=frequency_weight))
+    plt.plot(x, weighted_trendline(x), color='red', label='Weighted regression')
 
     plt.title('{} vs. {}'.format(y_title, x_title))
     plt.xlabel(x_title)
     plt.ylabel(y_title)
+    plt.legend(loc='upper right')
     plt.show()
