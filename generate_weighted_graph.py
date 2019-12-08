@@ -67,7 +67,7 @@ def compute_weights(X, y, weight_func=None):
 
     weights = None
     if weight_func is not None:
-        weights = [weight_func(X[i], y[i]) for i in range(len(X))]
+        weights = np.array([weight_func(X[i], y[i]) for i in range(len(X))])
 
     return weights
 
@@ -102,16 +102,15 @@ def coefficient_of_determination(X, y, trendline, weight_func=None):
         weights = [1] * len(X)
 
     y_regression = trendline(X)  
-    residuals = y - y_regression
 
-    mean = np.average(y_regression, weights=weights)
+    mean = np.sum(y * weights) / np.sum(weights)
 
-    # Calculate the sum of the mean square errors (mss)
-    # and the sum of the residual square errors (rss).
-    mss = np.sum(weights * (y_regression - mean)**2)
-    rss = np.sum(weights * residuals**2)
+    # Calculate the total sum of squares (tss) and
+    # the residual sum of squares.
+    tss = np.sum(weights * (y - mean)**2)
+    rss = np.sum(weights * (y_regression - y)**2)
 
-    return mss / (mss + rss)
+    return 1 - rss / tss
 
 with open(input_path, 'r') as input_file:
     csv_reader = csv.reader(input_file)
@@ -159,8 +158,19 @@ with open(input_path, 'r') as input_file:
     unweighted_trendline = generate_trendline(unique_x, unique_y)
     plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
 
-    weighted_trendline = generate_trendline(unique_x, unique_y, frequency_based_weight)
-    plt.plot(sorted_unique_x, weighted_trendline(sorted_unique_x), color='red', label='Weighted regression')
+    frequency_weighted_trendline = generate_trendline(unique_x, unique_y, frequency_based_weight)
+    plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), color='red', label='Frequency weighted regression')
+
+    variance_weighted_trendline = generate_trendline(unique_x, unique_y, variance_based_weight)
+    plt.plot(sorted_unique_x, variance_weighted_trendline(sorted_unique_x), label='Variance weighted regression')
+
+    print('Unweighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, unweighted_trendline), 3))
+    print('Frequency weighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, frequency_weighted_trendline, frequency_based_weight), 3))
+    print('Variance weighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, variance_weighted_trendline, variance_based_weight), 3))
+
+    for point in unique_points:
+        x, y = point
+        plt.text(x + 0.3, y + 0.3, round(frequency_based_weight(x, y), 1), fontsize=9)
 
     # Configure plot settings
     matplotlib.style.use(args.matplotlib_style)
