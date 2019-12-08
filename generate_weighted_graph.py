@@ -71,13 +71,15 @@ def compute_weights(X, y, weight_func=None):
 
     return weights
 
-def generate_trendline(X, y, weight_func=None, degree=1):
+def generate_polynomial_trendline(X, y, weight_func=None, degree=1):
     '''
     Generate a polynomial fit trendline.
     '''
 
     weights = compute_weights(X, y, weight_func)
-    return np.poly1d(np.polyfit(X, y, degree, w=weights))
+    trendline = np.poly1d(np.polyfit(X, y, degree, w=weights))
+    r_squared = coefficient_of_determination(X, y, trendline, weight_func)
+    return trendline, r_squared
 
 def coefficient_of_determination(X, y, trendline, weight_func=None):
     '''
@@ -144,18 +146,18 @@ with open(input_path, 'r') as input_file:
     sorted_unique_x = sorted(unique_x)
 
     # Regression line
-    unweighted_trendline = generate_trendline(unique_x, unique_y)
+    unweighted_trendline, unweighted_rsquared = generate_polynomial_trendline(unique_x, unique_y)
     plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
 
-    frequency_weighted_trendline = generate_trendline(unique_x, unique_y, frequency_based_weight)
-    plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), color='red', label='Frequency weighted regression')
+    frequency_weighted_trendline, frequency_weighted_rsquared = generate_polynomial_trendline(unique_x, unique_y, frequency_based_weight)
+    plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), label='Frequency weighted regression')
 
-    variance_weighted_trendline = generate_trendline(unique_x, unique_y, variance_based_weight)
+    variance_weighted_trendline, variance_weighted_rsquared = generate_polynomial_trendline(unique_x, unique_y, variance_based_weight)
     plt.plot(sorted_unique_x, variance_weighted_trendline(sorted_unique_x), label='Variance weighted regression')
 
-    print('Unweighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, unweighted_trendline), 3))
-    print('Frequency weighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, frequency_weighted_trendline, frequency_based_weight), 3))
-    print('Variance weighted R-squared (linear):', round(coefficient_of_determination(unique_x, unique_y, variance_weighted_trendline, variance_based_weight), 3))
+    print('Unweighted R-squared (linear):', round(unweighted_rsquared, 3))
+    print('Frequency weighted R-squared (linear):', round(frequency_weighted_rsquared, 3))
+    print('Variance weighted R-squared (linear):', round(variance_weighted_rsquared, 3))
 
     for point in unique_points:
         x, y = point
