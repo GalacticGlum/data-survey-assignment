@@ -145,8 +145,8 @@ with open(input_path, 'r') as input_file:
 
     # Split points into their independent components
     unique_points = list(frequency.keys())
-    unique_x, unique_y = np.array([point[0] for point in unique_points]), np.array([point[1] for point in unique_points])
-
+    unique_x, unique_y = map(np.array, list(zip(*unique_points)))
+    
     # Scatter plot
     scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=plt.cm.get_cmap('Blues'))
     plt.colorbar(scatter)
