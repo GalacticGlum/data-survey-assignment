@@ -27,9 +27,6 @@ parser.add_argument('--no-preview', dest='preview', help='Disable the graph prev
 parser.set_defaults(export=False, preview=True)
 args = parser.parse_args()
 
-# Initialize matplotlib style
-matplotlib.style.use(args.matplotlib_style)
-
 input_path = Path(args.input)
 if not (input_path.is_file() or input_path.exists()):
     logger.error('The specified input is not a file or does not exist!')
@@ -60,18 +57,60 @@ def variance_based_weight(x, y):
     return 1 / variance if variance > 0 else 0
 
 def frequency_based_weight(x, y):
-    return relative_frequencies[(x, y)]
+    return frequency[(x, y)]
+
+def compute_weights(X, y, weight_func=None):
+    '''
+    Compute the weights from a set of data and a weight function.
+    '''
+
+    weights = None
+    if weight_func is not None:
+        weights = [weight_func(X[i], y[i]) for i in range(len(X))]
+
+    return weights
 
 def generate_trendline(X, y, weight_func=None, degree=1):
     '''
     Generate a polynomial fit trendline.
     '''
 
-    weights = None
-    if weight_func is not None:
-        weights = [weight_func(X[i], y[i]) for i in range(len(X))]
-    
+    weights = compute_weights(X, y, weight_func)
     return np.poly1d(np.polyfit(X, y, degree, w=weights))
+
+def sum_squared_error(original_values, approximate_values, weights=None):
+    '''
+    Calculate the sum of squared errors between an approximate and original dataset.
+    '''
+
+    errors = (original_values - approximate_values)**2
+    if weights is not None:
+        errors *= weights
+
+    return sum(errors)
+
+def coefficient_of_determination(X, y, trendline, weight_func=None):
+    '''
+    Calculate the coefficient of determination (R-squared value).
+    '''
+
+    if weight_func is not None:
+        weights = compute_weights(X, y, weight_func)
+    else:
+        # All points are equally weighted
+        weights = [1] * len(X)
+
+    y_regression = trendline(X)  
+    residuals = y - y_regression
+
+    mean = np.average(y_regression, weights=weights)
+
+    # Calculate the sum of the mean square errors (mss)
+    # and the sum of the residual square errors (rss).
+    mss = np.sum(weights * (y_regression - mean)**2)
+    rss = np.sum(weights * residuals**2)
+
+    return mss / (mss + rss)
 
 with open(input_path, 'r') as input_file:
     csv_reader = csv.reader(input_file)
@@ -101,30 +140,29 @@ with open(input_path, 'r') as input_file:
 
     total_frequency = sum(frequency.values())
 
-    # Get unique points
-    unique_points = list(frequency.keys())
-    unique_x, unique_y = [point[0] for point in unique_points], [point[1] for point in unique_points]
-
     # Calculate weighting of points as a function of frequency
-    relative_frequencies = {point: frequency[point] / total_frequency for point in unique_points}
-    max_relative_frequencies = max(relative_frequencies.values())
+    frequency_weight = list(frequency.values())
 
-    color_map = plt.cm.get_cmap('Blues')
-    frequency_weight = [relative_frequencies[key] / max_relative_frequencies for key in relative_frequencies]
+    # Split points into their independent components
+    unique_points = list(frequency.keys())
+    unique_x, unique_y = np.array([point[0] for point in unique_points]), np.array([point[1] for point in unique_points])
 
-    # scatter plot
-    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=color_map)
+    # Scatter plot
+    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=plt.cm.get_cmap('Blues'))
     plt.colorbar(scatter)
 
-    # regression line
+    # Sort the Xs so that matplotlib can properly display them.
     sorted_unique_x = sorted(unique_x)
 
+    # Regression line
     unweighted_trendline = generate_trendline(unique_x, unique_y)
     plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
 
     weighted_trendline = generate_trendline(unique_x, unique_y, frequency_based_weight)
     plt.plot(sorted_unique_x, weighted_trendline(sorted_unique_x), color='red', label='Weighted regression')
 
+    # Configure plot settings
+    matplotlib.style.use(args.matplotlib_style)
     plt.title('{} vs. {}'.format(y_title, x_title))
     plt.xlabel(x_title)
     plt.ylabel(y_title)
