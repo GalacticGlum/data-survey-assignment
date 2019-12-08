@@ -54,6 +54,7 @@ def variance_based_weight(x, y):
 
     neighbours = k_nearest_neighbours((x, y), unique_points)
     variance = np.var([p[1] for p in filter(lambda x: x in neighbours, points)])
+
     return 1 / variance if variance > 0 else 0
 
 def frequency_based_weight(x, y):
@@ -146,7 +147,7 @@ with open(input_path, 'r') as input_file:
     # Split points into their independent components
     unique_points = list(frequency.keys())
     unique_x, unique_y = map(np.array, list(zip(*unique_points)))
-    
+
     # Scatter plot
     scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=plt.cm.get_cmap('Blues'))
     plt.colorbar(scatter)
