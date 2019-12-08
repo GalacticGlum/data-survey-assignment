@@ -79,17 +79,6 @@ def generate_trendline(X, y, weight_func=None, degree=1):
     weights = compute_weights(X, y, weight_func)
     return np.poly1d(np.polyfit(X, y, degree, w=weights))
 
-def sum_squared_error(original_values, approximate_values, weights=None):
-    '''
-    Calculate the sum of squared errors between an approximate and original dataset.
-    '''
-
-    errors = (original_values - approximate_values)**2
-    if weights is not None:
-        errors *= weights
-
-    return sum(errors)
-
 def coefficient_of_determination(X, y, trendline, weight_func=None):
     '''
     Calculate the coefficient of determination (R-squared value).
