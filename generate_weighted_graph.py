@@ -174,7 +174,7 @@ with open(input_path, 'r') as input_file:
     if args.show_frequencies:
         for point in unique_points:
             x, y = point
-            plt.text(x + 0.3, y + 0.3, round(frequency_based_weight(x, y), 1), fontsize=9)
+            plt.text(x + 0.3, y + 0.3, round(frequency[point], 1), fontsize=9)
 
     # Configure plot settings
     matplotlib.style.use(args.matplotlib_style)
