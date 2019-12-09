@@ -26,7 +26,9 @@ parser.add_argument('--export-dpi', type=int, help='The DPI of the exported file
 parser.add_argument('--export-format', type=str, help='The format of the exported file.', default='png')
 parser.add_argument('--no-preview', dest='preview', help='Disable the graph preview window.', action='store_false')
 parser.add_argument('--show-frequencies', dest='show_frequencies', help='Display the frequency of each point.', action='store_true')
-parser.set_defaults(export=False, preview=True, show_frequencies=False)
+parser.add_argument('--scale-point', dest='scale_point', help='Scale the point sizes with the frequency.', action='store_true')
+parser.add_argument('--base-radius-multiplier', type=float, help='The radius multiplier of a point.', default=100)
+parser.set_defaults(export=False, preview=True, show_frequencies=False, scale_point=False)
 args = parser.parse_args()
 
 input_path = Path(args.input)
@@ -138,14 +140,18 @@ with open(input_path, 'r') as input_file:
     total_frequency = sum(frequency.values())
 
     # Calculate weighting of points as a function of frequency
-    frequency_weight = list(frequency.values())
+    frequency_weight = np.array(list(frequency.values()))
 
     # Split points into their independent components
     unique_points = list(frequency.keys())
     unique_x, unique_y = map(np.array, list(zip(*unique_points)))
 
     # Scatter plot
-    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, cmap=plt.cm.get_cmap('Blues'))
+    sizes = None
+    if args.scale_point:
+        sizes = np.sqrt(frequency_weight) * args.base_radius_multiplier
+
+    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, s=sizes, cmap=plt.cm.get_cmap('Blues'))
     plt.colorbar(scatter)
 
     # Sort the Xs so that matplotlib can properly display them.
