@@ -8,6 +8,7 @@ import numpy as np
 import matplotlib
 import matplotlib.pyplot as plt
 from pathlib import Path
+from enum import Enum
 from utils import init_logger
 
 logger = init_logger()
@@ -24,7 +25,8 @@ parser.add_argument('--export-output', type=str, help='The path to the exported 
 parser.add_argument('--export-dpi', type=int, help='The DPI of the exported file.', default=400)
 parser.add_argument('--export-format', type=str, help='The format of the exported file.', default='png')
 parser.add_argument('--no-preview', dest='preview', help='Disable the graph preview window.', action='store_false')
-parser.set_defaults(export=False, preview=True)
+parser.add_argument('--show-frequencies', dest='show_frequencies', help='Display the frequency of each point.', action='store_true')
+parser.set_defaults(export=False, preview=True, show_frequencies=False)
 args = parser.parse_args()
 
 input_path = Path(args.input)
@@ -58,6 +60,10 @@ def variance_based_weight(x, y):
     return 1 / variance if variance > 0 else 0
 
 def frequency_based_weight(x, y):
+    '''
+    A frequency based weight predictor function.
+    '''
+
     return frequency[(x, y)]
 
 def compute_weights(X, y, weight_func=None):
@@ -159,9 +165,10 @@ with open(input_path, 'r') as input_file:
     print('Frequency weighted R-squared (linear):', round(frequency_weighted_rsquared, 3))
     print('Variance weighted R-squared (linear):', round(variance_weighted_rsquared, 3))
 
-    for point in unique_points:
-        x, y = point
-        plt.text(x + 0.3, y + 0.3, round(frequency_based_weight(x, y), 1), fontsize=9)
+    if args.show_frequencies:
+        for point in unique_points:
+            x, y = point
+            plt.text(x + 0.3, y + 0.3, round(frequency_based_weight(x, y), 1), fontsize=9)
 
     # Configure plot settings
     matplotlib.style.use(args.matplotlib_style)
