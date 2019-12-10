@@ -172,7 +172,7 @@ with open(input_path, 'r') as input_file:
     if args.scale_point:
         sizes = np.sqrt(frequency_weight) * args.base_radius_multiplier
 
-    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, s=sizes, cmap=plt.cm.get_cmap('Blues'))
+    scatter = plt.scatter(unique_x, unique_y, c=frequency_weight, s=sizes, cmap=plt.cm.get_cmap('Greys'))
     plt.colorbar(scatter)
 
     # Sort the Xs so that matplotlib can properly display them.
@@ -180,15 +180,15 @@ with open(input_path, 'r') as input_file:
 
     # Regression line
     unweighted_trendline, unweighted_p, unweighted_rsquared = generate_polynomial_trendline(unique_x, unique_y)
-    plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
+    plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), color='black', linestyle='dashed', label='Unweighted regression')
 
     frequency_weighted_trendline, frequency_weighted_p, frequency_weighted_rsquared = generate_polynomial_trendline(unique_x, \
         unique_y, frequency_based_weight)
-    plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), label='Frequency weighted regression')
+    plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), color='black', linestyle='dashdot', label='Frequency weighted regression')
 
     variance_weighted_trendline, variance_weighted_p, variance_weighted_rsquared = generate_polynomial_trendline(unique_x, \
         unique_y, variance_based_weight)
-    plt.plot(sorted_unique_x, variance_weighted_trendline(sorted_unique_x), label='Variance weighted regression')
+    plt.plot(sorted_unique_x, variance_weighted_trendline(sorted_unique_x), linestyle='solid', label='Variance weighted regression')
 
     print('Unweighted correlation coefficient (linear):', round(unweighted_p, 3))
     print('Frequency weighted correlation coefficient (linear):', round(frequency_weighted_p, 3))
