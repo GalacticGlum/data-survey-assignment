@@ -79,16 +79,6 @@ def compute_weights(X, y, weight_func=None):
 
     return weights
 
-def generate_polynomial_trendline(X, y, weight_func=None, degree=1):
-    '''
-    Generate a polynomial fit trendline.
-    '''
-
-    weights = compute_weights(X, y, weight_func)
-    trendline = np.poly1d(np.polyfit(X, y, degree, w=weights))
-    r_squared = coefficient_of_determination(X, y, trendline, weight_func)
-    return trendline, r_squared
-
 def coefficient_of_determination(X, y, trendline, weight_func=None):
     '''
     Calculate the coefficient of determination (R-squared value).
@@ -102,7 +92,7 @@ def coefficient_of_determination(X, y, trendline, weight_func=None):
 
     y_regression = trendline(X)  
 
-    mean = np.sum(y * weights) / np.sum(weights)
+    mean = np.average(y, weights=weights)
 
     # Calculate the total sum of squares (tss) and
     # the residual sum of squares.
@@ -110,6 +100,37 @@ def coefficient_of_determination(X, y, trendline, weight_func=None):
     rss = np.sum(weights * (y_regression - y)**2)
 
     return 1 - rss / tss
+
+def covariance(X, y, weights=None):
+    '''
+    Calculate the covariance.
+    '''
+
+    if weights is None:
+        weights = [1] * len(X)
+    
+    return np.average((X - np.average(X, weights=weights)) * (y - np.average(y, weights=weights)), weights=weights)
+
+def correlation_coefficient(X, y, weights=None):
+    '''
+    Calculates the Pearson correlation coefficient.
+    '''
+
+    if weights is None:
+        weights = [1] * len(X)
+
+    return covariance(X, y, weights) / np.sqrt(covariance(X, X, weights) * covariance(y, y, weights))
+
+def generate_polynomial_trendline(X, y, weight_func=None, degree=1):
+    '''
+    Generate a polynomial fit trendline.
+    '''
+
+    weights = compute_weights(X, y, weight_func)
+    trendline = np.poly1d(np.polyfit(X, y, degree, w=weights))
+    p_value = correlation_coefficient(X, y, weights)
+    r_squared = coefficient_of_determination(X, y, trendline, weight_func)
+    return trendline, p_value, r_squared
 
 with open(input_path, 'r') as input_file:
     csv_reader = csv.reader(input_file)
@@ -158,14 +179,20 @@ with open(input_path, 'r') as input_file:
     sorted_unique_x = sorted(unique_x)
 
     # Regression line
-    unweighted_trendline, unweighted_rsquared = generate_polynomial_trendline(unique_x, unique_y)
+    unweighted_trendline, unweighted_p, unweighted_rsquared = generate_polynomial_trendline(unique_x, unique_y)
     plt.plot(sorted_unique_x, unweighted_trendline(sorted_unique_x), linestyle='--', label='Unweighted regression')
 
-    frequency_weighted_trendline, frequency_weighted_rsquared = generate_polynomial_trendline(unique_x, unique_y, frequency_based_weight)
+    frequency_weighted_trendline, frequency_weighted_p, frequency_weighted_rsquared = generate_polynomial_trendline(unique_x, \
+        unique_y, frequency_based_weight)
     plt.plot(sorted_unique_x, frequency_weighted_trendline(sorted_unique_x), label='Frequency weighted regression')
 
-    variance_weighted_trendline, variance_weighted_rsquared = generate_polynomial_trendline(unique_x, unique_y, variance_based_weight)
+    variance_weighted_trendline, variance_weighted_p, variance_weighted_rsquared = generate_polynomial_trendline(unique_x, \
+        unique_y, variance_based_weight)
     plt.plot(sorted_unique_x, variance_weighted_trendline(sorted_unique_x), label='Variance weighted regression')
+
+    print('Unweighted correlation coefficient (linear):', round(unweighted_p, 3))
+    print('Frequency weighted correlation coefficient (linear):', round(frequency_weighted_p, 3))
+    print('Variance weighted correlation coefficient (linear):', round(variance_weighted_p, 3))
 
     print('Unweighted R-squared (linear):', round(unweighted_rsquared, 3))
     print('Frequency weighted R-squared (linear):', round(frequency_weighted_rsquared, 3))
